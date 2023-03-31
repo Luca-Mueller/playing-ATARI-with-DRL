@@ -1,0 +1,8 @@
+torch
+gym
+gym[atari]
+gym[accept-rom-license]
+opencv-python
+matplotlib
+scipy
+colorama
