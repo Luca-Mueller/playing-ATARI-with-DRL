@@ -41,7 +41,7 @@ class DQNAgent:
         self.best_model_weights = None          # Model weights of best episode
         self.name = "DQNAgent"                  # String representation 
 
-    def train(self, env, n_episodes: int, max_steps: int = None, batch_size: int = 32, warm_up_period: int = 0) -> np.array:
+    def train(self, env, n_steps: int, max_steps: int = None, batch_size: int = 32, warm_up_period: int = 0) -> np.array:
         # Warm up (collect trajectories with random policy and no training)
         driver = self.driver_type(env, RandomPolicy(self.policy_model.shape[1], self.device), self.observer, self.device)
         while len(self.replay_buffer) < warm_up_period:
@@ -55,13 +55,16 @@ class DQNAgent:
         driver = self.driver_type(env, self.policy, self.observer, self.device)
         history = []
         max_return = None
-        for episode in range(n_episodes):
+        steps = 0
+        train_done = False
+
+        for episode in count():
             for step in count():
                 # TODO: Epsilon cannot be printed for policies other than EpsilonGreedyPolicy
-                print(f"\r{Style.BRIGHT+Fore.WHITE}[>]{Style.RESET_ALL} Episode: {episode + 1:>5}/{n_episodes:<5}\t ",
-                      f"BufferSize: {len(self.replay_buffer):>6}/",
-                      f"{self.replay_buffer.capacity:<6}\t Epsilon: {self.policy.eps:.4f}",
-                      f"\tMax Return: {max_return if max_return is not None else '-'}", end="")
+                print(f"\r{Style.BRIGHT+Fore.WHITE}[>]{Style.RESET_ALL} Step: {steps + 1:>7}/{n_steps:<7}  ",
+                      f"BufferSize: {len(self.replay_buffer):>7}/",
+                      f"{self.replay_buffer.capacity:<6}  Epsilon: {self.policy.eps:.4f}  ",
+                      f"Max Return: {max_return if max_return is not None else '-'}", end="")
 
                 done = driver.step()
                 self._optimize(batch_size)
@@ -74,6 +77,16 @@ class DQNAgent:
                     driver.append_rewards()
                     driver.reset()
                     break
+
+                steps += 1
+
+                # end of training
+                if steps == n_steps:
+                    train_done = True
+                    break
+
+            if train_done:
+                break
 
             history.append(driver.reward_history[-1])
             if max_return is None or max_return <= history[-1]:

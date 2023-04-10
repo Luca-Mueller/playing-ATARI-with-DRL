@@ -87,7 +87,7 @@ class AgentArgParser(argparse.ArgumentParser):
         self.add_argument("-S", "--epsilon-start", type=float, default=1.0, help="initial epsilon for EG policy (1.0)")
         self.add_argument("-E", "--epsilon-end", type=float, default=0.1, help="final epsilon for EG policy (0.1)")
         self.add_argument("-d", "--epsilon-decay", type=float, default=0.9999, help="epsilon decay for EG policy (0.995)")
-        self.add_argument("-e", "--episodes", type=int, default=200, help="N training episodes (200)")
+        self.add_argument("-n", "--steps", type=int, default=1_000_000, help="N training steps (1,000,000)")
         self.add_argument("-s", "--max-steps", type=int, default=None, help="max training steps per episode (inf)")
         self.add_argument("-w", "--warm-up", type=int, default=0, help="N training steps collected before training "
                                                                        "starts (0)")
@@ -131,7 +131,7 @@ class ArgPrinter:
         print_param(f"Eps Start:      {param_color}{args.epsilon_start}{Style.RESET_ALL}")
         print_param(f"Eps End:        {param_color}{args.epsilon_end}{Style.RESET_ALL}")
         print_param(f"Eps Decay:      {param_color}{args.epsilon_decay}{Style.RESET_ALL}")
-        print_param(f"Episodes:       {param_color}{args.episodes}{Style.RESET_ALL}")
+        print_param(f"N Steps:        {param_color}{args.steps}{Style.RESET_ALL}")
         print_param(f"Max Steps:      {param_color}{args.max_steps}{Style.RESET_ALL}")
         print_param(f"Warm Up:        {param_color}{args.warm_up}{Style.RESET_ALL}")
         print("")

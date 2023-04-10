@@ -64,7 +64,7 @@ GAMMA = args.gamma
 EPS_START = args.epsilon_start
 EPS_END = args.epsilon_end
 EPS_DECAY = args.epsilon_decay
-N_EPISODES = args.episodes
+N_STEPS = args.steps
 MAX_STEPS = args.max_steps if args.max_steps else env.spec.max_episode_steps
 args.max_steps = MAX_STEPS
 WARM_UP = args.warm_up
@@ -102,7 +102,7 @@ agent = DQNAgent(model,
 # Train
 print_busy("Train...")
 episode_scores = agent.train(env,
-                             N_EPISODES,
+                             N_STEPS,
                              MAX_STEPS,
                              batch_size=BATCH_SIZE,
                              warm_up_period=WARM_UP,
