@@ -8,7 +8,7 @@ An implementation of the 2013 paper "Playing Atari with Deep Reinforcement Learn
 * run ```pip install -r requirements.txt```
 
 ## Run
-```python3 src/main.py -t <game>```
+```python3 src/ale.py -t <game>```
 where ```<game>``` is one of:
 * pong
 * breakout
@@ -16,4 +16,4 @@ where ```<game>``` is one of:
 (add rest)
 
 ## Help
-```python3 src/main.py -h```
+```python3 src/ale.py -h```
