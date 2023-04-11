@@ -62,9 +62,10 @@ class DQNAgent:
             for step in count():
                 # TODO: Epsilon cannot be printed for policies other than EpsilonGreedyPolicy
                 print(f"\r{Style.BRIGHT+Fore.WHITE}[>]{Style.RESET_ALL} Step: {steps + 1:>7}/{n_steps:<7}  ",
+                      f"Episode: {episode:>5}  "
                       f"BufferSize: {len(self.replay_buffer):>7}/",
                       f"{self.replay_buffer.capacity:<6}  Epsilon: {self.policy.eps:.4f}  ",
-                      f"Max Return: {max_return if max_return is not None else '-'}", end="")
+                      f"Max Return: {int(max_return) if max_return is not None else '-'}", end="")
 
                 done = driver.step()
                 self._optimize(batch_size)
