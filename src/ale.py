@@ -73,7 +73,7 @@ MAX_STEPS = args.max_steps if args.max_steps else env.spec.max_episode_steps
 args.max_steps = MAX_STEPS
 WARM_UP = args.warm_up
 TEST_EPS = 10
-TEST_EVERY = 100
+TEST_EVERY = 10_000
 
 # Save options
 SAVE_MODEL = args.save_model
