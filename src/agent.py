@@ -8,7 +8,7 @@ from colorama import Style, Fore
 
 from network import DQN
 from replay_buffer import ReplayBuffer, Transition
-from policy import Policy, GreedyPolicy, RandomPolicy
+from policy import Policy, GreedyPolicy, EpsilonGreedyPolicy, RandomPolicy
 from driver import ALEDriver
 from observer import Observer, BufferObserver, DummyObserver
 
@@ -62,7 +62,7 @@ class DQNAgent:
             for step in count():
                 # TODO: Epsilon cannot be printed for policies other than EpsilonGreedyPolicy
                 print(f"\r{Style.BRIGHT+Fore.WHITE}[>]{Style.RESET_ALL} Step: {steps + 1:>7}/{n_steps:<7}  ",
-                      f"Episode: {episode:>5}  "
+                      #f"Episode: {episode:>5}  "
                       f"BufferSize: {len(self.replay_buffer):>7}/",
                       f"{self.replay_buffer.capacity:<6}  Epsilon: {self.policy.eps:.4f}  ",
                       f"Max Return: {int(max_return) if max_return is not None else '-'}", end="")
@@ -104,12 +104,19 @@ class DQNAgent:
     def play(self, env, n_episodes: int, max_steps: int, observer: Observer = None) -> np.array:
         if observer is None:
             observer = DummyObserver()
-        driver = self.driver_type(env, GreedyPolicy(self.policy_model, device=self.device), observer, self.device)
+        driver = self.driver_type(env, 
+                                  EpsilonGreedyPolicy(self.policy_model, 
+                                    device=self.device, 
+                                    eps_start=0.05, 
+                                    eps_decay=1.0), 
+                                  observer, 
+                                  self.device,
+                                  )
         history = []
 
         for episode in range(n_episodes):
-            print(f"\r{Style.BRIGHT+Fore.WHITE}[>]{Style.RESET_ALL} Episode: {(episode + 1):>5}/{n_episodes:<5}"
-                  f"\t Score: {np.mean(history) if len(history) else 0.0:.2f}", end="")
+            print(f"\r{Style.BRIGHT+Fore.WHITE}[>]{Style.RESET_ALL} Episode: {(episode + 1):>3}/{n_episodes:<3}  "
+                  f"Score: {np.mean(history) if len(history) else 0.0:.2f}", end="")
 
             for step in count():
                 done = driver.step()

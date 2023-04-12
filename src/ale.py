@@ -1,6 +1,7 @@
 import gym
 import pickle
 import warnings
+import numpy as np
 
 import torch
 import torch.nn as nn
@@ -44,15 +45,18 @@ else:
     print(f"environment '{ENV}' invalid")
     exit(1)
 
-# Initialize color / gym / device
+# Initialize color / gym
 init()
-env = gym.make(ENV_NAMES[ENV], render_mode="human" if VIS_TRAIN else None)
-env = FireResetEnv(env)
-env = MaxAndSkipEnv(env)
-env = ClipRewardEnv(env)
-DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+def reset_train_env():
+    env = gym.make(ENV_NAMES[ENV], render_mode="human" if VIS_TRAIN else None)
+    env = FireResetEnv(env)
+    env = MaxAndSkipEnv(env)
+    env = ClipRewardEnv(env)
+    return env
+env = reset_train_env()
 
 # Device
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 if args.cpu:
     DEVICE = torch.device("cpu")
 
@@ -69,6 +73,7 @@ MAX_STEPS = args.max_steps if args.max_steps else env.spec.max_episode_steps
 args.max_steps = MAX_STEPS
 WARM_UP = args.warm_up
 TEST_EPS = 10
+TEST_EVERY = 10_000
 
 # Save options
 SAVE_MODEL = args.save_model
@@ -101,20 +106,44 @@ agent = DQNAgent(model,
 
 # Train
 print_busy("Train...")
-episode_scores = agent.train(env,
-                             N_STEPS,
-                             MAX_STEPS,
-                             batch_size=BATCH_SIZE,
-                             warm_up_period=WARM_UP,
-                            )
+train_scores = []
+
+# Stop between training steps to record reward/maxQ
+for _ in range(N_STEPS // TEST_EVERY):
+    env = reset_train_env()
+    agent.train(env,
+                TEST_EVERY,
+                MAX_STEPS,
+                batch_size=BATCH_SIZE,
+                warm_up_period=WARM_UP,
+                )
+    env = reset_train_env()
+    scores = agent.play(env, TEST_EPS, env.spec.max_episode_steps)
+    train_scores.append(np.mean(scores))
+
+# Save training scores
+try:
+    score_dir = Path("../scores")
+    if not score_dir.is_dir():
+        score_dir.mkdir()
+        print_success(f"Created folder:\t'{score_dir}'")
+
+    idx = len([c for c in score_dir.iterdir()])
+    np.save(score_dir / f"{ENV}_scores_{idx}.npy", train_scores)
+    print_success("Saved rewards")
+    
+except Exception as e:
+    print_fail("Could not save scores:")
+    print(e)
+
+print_success("Done")
 
 # Free GPU memory
 # TODO: think this could be done more efficiently
 replay_buffer.to(torch.device("cpu"))
 torch.cuda.empty_cache()
 
-print_success("Done")
-plot_scores(episode_scores, title=(ENV + agent.name + " Training"))
+plot_scores(train_scores, title=(ENV + agent.name + " Training"))
 
 # Reset env
 # TODO: test in non-deterministic env?
@@ -167,5 +196,5 @@ if SAVE_AGENT:
         print_success("Save agent as:\t'" + agent_file + "'")
 
     except Exception as e:
-        print_fail("Could not save model:")
+        print_fail("Could not save agent:")
         print(e)
