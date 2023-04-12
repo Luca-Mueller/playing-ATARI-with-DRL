@@ -79,3 +79,8 @@ class EpsilonGreedyPolicy(Policy):
         else:
             action = torch.tensor([[random.randrange(self.n_actions)]], device=self.device, dtype=torch.long)
         return action
+
+    def _return_max_qvalue(self, state) -> int:
+        q_values = self.model(state)
+        q = max(max(q_values))
+        return q.item()

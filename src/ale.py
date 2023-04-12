@@ -73,7 +73,7 @@ MAX_STEPS = args.max_steps if args.max_steps else env.spec.max_episode_steps
 args.max_steps = MAX_STEPS
 WARM_UP = args.warm_up
 TEST_EPS = 10
-TEST_EVERY = 10_000
+TEST_EVERY = 100
 
 # Save options
 SAVE_MODEL = args.save_model
@@ -107,6 +107,7 @@ agent = DQNAgent(model,
 # Train
 print_busy("Train...")
 train_scores = []
+train_qvalues = []
 
 # Stop between training steps to record reward/maxQ
 for _ in range(N_STEPS // TEST_EVERY):
@@ -118,8 +119,9 @@ for _ in range(N_STEPS // TEST_EVERY):
                 warm_up_period=WARM_UP,
                 )
     env = reset_train_env()
-    scores = agent.play(env, TEST_EPS, env.spec.max_episode_steps)
+    scores, q_values = agent.play(env, TEST_EPS, env.spec.max_episode_steps)
     train_scores.append(np.mean(scores))
+    train_qvalues.append(np.mean(q_values))
 
 # Save training scores
 try:
@@ -130,7 +132,8 @@ try:
 
     idx = len([c for c in score_dir.iterdir()])
     np.save(score_dir / f"{ENV}_scores_{idx}.npy", train_scores)
-    print_success("Saved rewards")
+    np.save(score_dir / f"{ENV}_q_values_{idx}.npy", train_scores)
+    print_success("Saved rewards and q_values")
     
 except Exception as e:
     print_fail("Could not save scores:")
@@ -158,7 +161,7 @@ threshold = env.spec.reward_threshold
 if threshold:
     print_success(f"Target Score: {threshold:.2f}")
 agent.load_best_model()
-test_scores = agent.play(env, TEST_EPS, env.spec.max_episode_steps)
+test_scores, _ = agent.play(env, TEST_EPS, env.spec.max_episode_steps)
 
 print_success("Done")
 plot_scores(test_scores, title=(ENV + agent.name + " Test"))

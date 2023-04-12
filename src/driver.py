@@ -25,11 +25,14 @@ class ALEDriver:
         self.device = device            # gpu or cpu
         self.reward_history = []        # past rewards
         self._acc_reward = None         # cumulative reward for current episode
+        self._acc_qvalues = []
         self.reset()
 
     def step(self) -> bool:
         self.steps += 1
         action = self.policy.select_action(self.state)
+        # get the max predicted q value from the current state and append
+        self._acc_qvalues.append(self.policy._return_max_qvalue(self.state))
         observation, reward, terminated, truncated, _ = self.env.step(action.item())
         self._acc_reward += reward
         reward = torch.tensor([reward], device=self.device, dtype=torch.float32)
@@ -59,3 +62,6 @@ class ALEDriver:
 
     def append_rewards(self):
         self.reward_history.append(self._acc_reward)
+
+    def return_qvalues(self):
+        return self._acc_qvalues

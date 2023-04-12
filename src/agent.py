@@ -132,8 +132,8 @@ class DQNAgent:
             history.append(driver.reward_history[-1])
 
         env.close()
-        print("")
-        return np.array(history)
+
+        return np.array(history), np.array(driver.return_qvalues())
 
     def save_best_model(self):
         self.best_model_weights = copy.deepcopy(self.policy_model.state_dict())
