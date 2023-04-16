@@ -36,6 +36,10 @@ VIS_EVAL = args.v or args.vv
 ENV_NAMES = {"Pong": "PongDeterministic-v4", 
              "Enduro": "EnduroDeterministic-v0", 
              "Breakout": "BreakoutDeterministic-v0",
+             "Seaquest": "SeaquestDeterministic-v0",
+             "Beamrider": "BeamRiderDeterministic-v0",
+             "Spaceinvaders": "SpaceInvadersDeterministic-v0",
+             "Qbert": "QbertDeterministic-v0",
             }
 
 ENV = args.task_name
@@ -47,11 +51,12 @@ else:
 
 # Initialize color / gym
 init()
-def reset_train_env():
+def reset_train_env(clip_rewards = True):
     env = gym.make(ENV_NAMES[ENV], render_mode="human" if VIS_TRAIN else None)
     env = FireResetEnv(env)
     env = MaxAndSkipEnv(env)
-    env = ClipRewardEnv(env)
+    if clip_rewards:
+        env = ClipRewardEnv(env)
     return env
 env = reset_train_env()
 
@@ -118,7 +123,7 @@ for _ in range(N_STEPS // TEST_EVERY):
                 batch_size=BATCH_SIZE,
                 warm_up_period=WARM_UP,
                 )
-    env = reset_train_env()
+    env = reset_train_env(clip_rewards=False)
     scores, q_values = agent.play(env, TEST_EPS, env.spec.max_episode_steps)
     train_scores.append(np.mean(scores))
     train_qvalues.append(np.mean(q_values))
@@ -132,7 +137,7 @@ try:
 
     idx = len([c for c in score_dir.iterdir()])
     np.save(score_dir / f"{ENV}_scores_{idx}.npy", train_scores)
-    np.save(score_dir / f"{ENV}_q_values_{idx}.npy", train_scores)
+    np.save(score_dir / f"{ENV}_q_values_{idx}.npy", train_qvalues)
     print_success("Saved rewards and q_values")
     
 except Exception as e:

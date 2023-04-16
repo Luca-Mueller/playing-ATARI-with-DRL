@@ -19,3 +19,16 @@ def plot_scores(scores, title: str = None, show: bool = True):
         plt.show()
 
     return plt.gcf()
+
+def plot_qvalues(scores, title: str = None, show: bool = True):
+    scores = np.array(scores, dtype=np.float32)
+    if title is not None:
+        plt.title(title)
+    plt.xlabel('Episode')
+    plt.ylabel('Avg Q-value')
+    plt.plot(scores)
+
+    if show:
+        plt.show()
+
+    return plt.gcf()
